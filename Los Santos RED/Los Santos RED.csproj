@@ -1274,6 +1274,7 @@
     <Compile Include="lsr\Ped\WeaponInventory\WeaponInventory.cs" />
     <Compile Include="lsr\Tasker\Other\eDrivingStyles.cs" />
     <Compile Include="lsr\UI\Menu\Main\BustedMenu.cs" />
+    <Compile Include="lsr\UI\Menu\Main\FelonyStopMenu.cs" />
     <Compile Include="lsr\UI\Menu\Main\DeathMenu.cs" />
     <Compile Include="lsr\UI\Menu\Debug\DebugMenu.cs" />
     <Compile Include="lsr\UI\Other\DistanceSelect.cs" />

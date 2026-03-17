@@ -67,5 +67,7 @@ namespace LosSantosRED.lsr.Interface
         VehicleRaceManager RacingManager { get; }
         uint TimeInCurrentVehicle { get; }
         bool IsCop { get; }
+        bool IsInFelonyStop { get; }
+        bool IsPendingFelonyTrafficStop { get; }
     }
 }

@@ -36,6 +36,7 @@ public class UI : IMenuProvideable
     private List<ModUIMenu> MenuList;
     private MainMenu MainMenu;
     private BustedMenu BustedMenu;
+    private FelonyStopMenu FelonyStopMenu;
     private DeathMenu DeathMenu;
     private DebugMenu DebugMenu;
     private CraftingMenu CraftingMenu;
@@ -46,6 +47,9 @@ public class UI : IMenuProvideable
     private bool IsShowingCustomOverlay = false;
     private bool StartedBustedEffect = false;
     private bool StartedDeathEffect = false;
+    private bool StartedFelonyStopEffect = false;
+    private uint GameTimeLastFelonyStop;
+    private const uint FelonyStopMenuDelayMs = 500;
     private string debugString1;
     private bool ShowRadar;
     private uint SpriteUint;
@@ -93,12 +97,13 @@ public class UI : IMenuProvideable
         TimerBarPool = new TimerBarPool();
         DeathMenu = new DeathMenu(MenuPool, pedSwap, respawning, placesOfInterest, Settings, player, gameSaves);
         BustedMenu = new BustedMenu(MenuPool, pedSwap, respawning, placesOfInterest, Settings, policeRespondable, time, World);
+        FelonyStopMenu = new FelonyStopMenu(MenuPool, policeRespondable);
         MainMenu = new MainMenu(MenuPool,actionablePlayer, locationInteractableplayer, saveablePlayer, gameSaves, weapons, pedSwap, world, Settings, Tasker, playerinventory, modItems, this, gangs, time,placesOfInterest, dances, gestures, activityPerformable,agencies, crimes, intoxicants, shopMenus);
         DebugMenu = new DebugMenu(MenuPool, actionablePlayer, weapons, radioStations, placesOfInterest, Settings, Time, World, Tasker, dispatcher,agencies, gangs, modItems, crimes, plateTypes, names, modDataFileManager, policeRespondable, interactionable);
         CraftableItems = modDataFileManager.CraftableItems;
         Crafting = crafting;
         CraftingMenu = new CraftingMenu(MenuPool, CraftableItems, Crafting, locationInteractableplayer, modItems, Settings);
-        MenuList = new List<ModUIMenu>() { DeathMenu, BustedMenu, MainMenu, DebugMenu, CraftingMenu };
+        MenuList = new List<ModUIMenu>() { DeathMenu, BustedMenu, FelonyStopMenu, MainMenu, DebugMenu, CraftingMenu };
         PlayerInfoMenu = new PlayerInfoMenu(gangRelateable, Time, placesOfInterest, gangs, gangTerritories, zones, streets, interiors, World, shopMenus,modItems, weapons, Settings, LocationTypes);
         SavePauseMenu = new SavePauseMenu(saveablePlayer, Time, placesOfInterest, gangs, gangTerritories, zones, streets, interiors, World, shopMenus, modItems, weapons, Settings, gameSaves, pedSwap,playerinventory, saveablePlayer, agencies, modDataFileManager.Contacts, interactionable);
         MessagesMenu = new MessagesMenu(gangRelateable, Time, placesOfInterest, gangs, gangTerritories, zones, streets, interiors, World, Settings, modDataFileManager.Contacts);
@@ -114,6 +119,7 @@ public class UI : IMenuProvideable
     {
         IsDisposed = false;
         BustedMenu.Setup();
+        FelonyStopMenu.Setup();
         DeathMenu.Setup();
         MainMenu.Setup();
         PlayerInfoMenu.Setup();
@@ -358,10 +364,28 @@ public class UI : IMenuProvideable
                 Show(BustedMenu);
             }
         }
+        else if (DisplayablePlayer.IsPendingFelonyTrafficStop)
+        {
+            Game.DisplaySubtitle("~r~PULL OVER!~s~ Officers have identified you - stop your vehicle immediately.");
+        }
+        else if (DisplayablePlayer.IsInFelonyStop)
+        {
+            if (!StartedFelonyStopEffect)
+            {
+                GameTimeLastFelonyStop = Game.GameTime;
+                StartedFelonyStopEffect = true;
+            }
+            if (GameTimeLastFelonyStop != 0 && Game.GameTime - GameTimeLastFelonyStop >= FelonyStopMenuDelayMs)
+            {
+                GameTimeLastFelonyStop = 0;
+                Show(FelonyStopMenu);
+            }
+        }
         else
         {
             GameTimeLastDied = 0;
             GameTimeLastBusted = 0;
+            GameTimeLastFelonyStop = 0;
 
             //if (StartedBustedEffect || StartedDeathEffect)
             //{
@@ -376,6 +400,7 @@ public class UI : IMenuProvideable
             }
             StartedBustedEffect = false;
             StartedDeathEffect = false;
+            StartedFelonyStopEffect = false;
             if (Settings.SettingsManager.UIGeneralSettings.AllowScreenEffectReset && IsShowingCustomOverlay)
             {
                 NativeFunction.Natives.xB4EDDC19532BFB85();
