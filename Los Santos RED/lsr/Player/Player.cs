@@ -36,6 +36,8 @@ namespace Mod
         private uint GameTimeLastShot;
         private uint GameTimeLastUpdatedLookedAtPed;
         private uint GameTimeStartedHotwiring;
+        private uint GameTimeStartedFelonyTrafficStop;
+        private uint GameTimeStoppedDuringFelonyTrafficStop;
         private uint GameTimeStartedMoving;
         private uint GameTimeStartedMovingFast;
         private uint GameTimeStartedPlaying;
@@ -329,6 +331,7 @@ namespace Mod
         public bool IsAnimal => false;
         public bool IsBusted { get; private set; }
         public bool IsInFelonyStop { get; private set; }
+        public bool IsPendingFelonyTrafficStop { get; private set; }
         public bool IsCarJacking { get; set; }
         public bool IsChangingLicensePlates { get; set; }
         public bool IsSetAutoCallBackup { get; set; } = false;
@@ -657,6 +660,7 @@ namespace Mod
             PlayerVoice.Update();
             ActivityManager.Update();
             OfficerMIAWatcher.Update();
+            UpdateFelonyTrafficStop();
             //GameFiber.Yield();//TR Yield RemovedTest 1
             RestrictedAreaManager.Update();//yields in here
             TaxiManager.Update();
@@ -711,6 +715,7 @@ namespace Mod
             IsArrested = false;
             IsBeingBooked = false;
             IsInFelonyStop = false;
+            CancelFelonyTrafficStop();
             Game.LocalPlayer.HasControl = true;
             BeingArrested = false;
             HealthState.Reset();
@@ -1937,15 +1942,73 @@ namespace Mod
                 OnPlayerBusted();
             }
         }
-        public void InitiateFelonyStop()
+        public void InitiateFelonyTrafficStop()
         {
-            if (IsInFelonyStop || IsWanted || IsBusted || !IsInVehicle || !CriminalHistory.IsEligibleForFelonyStop)
+            if (IsPendingFelonyTrafficStop || IsInFelonyStop || IsWanted || IsBusted || !IsInVehicle || !CriminalHistory.IsEligibleForFelonyStop)
+            {
+                return;
+            }
+            IsPendingFelonyTrafficStop = true;
+            GameTimeStartedFelonyTrafficStop = Game.GameTime;
+            GameTimeStoppedDuringFelonyTrafficStop = 0;
+            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Traffic Stop Initiated");
+        }
+        private void InitiateFelonyStop()
+        {
+            if (IsInFelonyStop)
             {
                 return;
             }
             IsInFelonyStop = true;
-            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Initiated");
+            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Player Pulled Over - Showing Menu");
             CriminalHistory.ApplyFelonyStopWanted();
+        }
+        private void UpdateFelonyTrafficStop()
+        {
+            if (!IsPendingFelonyTrafficStop)
+            {
+                return;
+            }
+            if (!IsInVehicle || IsWanted || IsBusted || IsInFelonyStop)
+            {
+                CancelFelonyTrafficStop();
+                return;
+            }
+            uint pullOverTime = Settings.SettingsManager.CriminalHistorySettings.FelonyStopPullOverTime;
+            uint holdTime = Settings.SettingsManager.CriminalHistorySettings.FelonyStopPullOverHoldTime;
+            if (IsStill)
+            {
+                if (GameTimeStoppedDuringFelonyTrafficStop == 0)
+                {
+                    GameTimeStoppedDuringFelonyTrafficStop = Game.GameTime;
+                }
+                else if (holdTime > 0 && Game.GameTime - GameTimeStoppedDuringFelonyTrafficStop >= holdTime)
+                {
+                    IsPendingFelonyTrafficStop = false;
+                    GameTimeStartedFelonyTrafficStop = 0;
+                    GameTimeStoppedDuringFelonyTrafficStop = 0;
+                    InitiateFelonyStop();
+                }
+            }
+            else
+            {
+                GameTimeStoppedDuringFelonyTrafficStop = 0;
+                bool playerFleeing = VehicleSpeedMPH >= Settings.SettingsManager.CriminalHistorySettings.FelonyStopFleeSpeedMPH
+                    && Game.GameTime - GameTimeStartedFelonyTrafficStop >= Settings.SettingsManager.CriminalHistorySettings.FelonyStopFleeReactionTime;
+                bool timeExpired = pullOverTime > 0 && Game.GameTime - GameTimeStartedFelonyTrafficStop >= pullOverTime;
+                if (playerFleeing || timeExpired)
+                {
+                    EntryPoint.WriteToConsole($"PLAYER FELONY STOP: Player Fled (fleeing={playerFleeing}, timeExpired={timeExpired})");
+                    CriminalHistory.ApplyFelonyStopWanted();
+                    CancelFelonyTrafficStop();
+                }
+            }
+        }
+        private void CancelFelonyTrafficStop()
+        {
+            IsPendingFelonyTrafficStop = false;
+            GameTimeStartedFelonyTrafficStop = 0;
+            GameTimeStoppedDuringFelonyTrafficStop = 0;
         }
         public void OnFelonyStopComply()
         {

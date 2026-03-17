@@ -106,6 +106,7 @@ namespace LosSantosRED.lsr.Interface
         void SetWantedLevel(int resultingWantedLevel, string name, bool v);
         CuffManager CuffManager { get; }
         bool IsInFelonyStop { get; }
+        bool IsPendingFelonyTrafficStop { get; }
         void OnFelonyStopComply();
         void OnFelonyStopResist();
         //void YellInPain();

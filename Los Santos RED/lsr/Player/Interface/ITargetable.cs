@@ -70,6 +70,7 @@ namespace LosSantosRED.lsr.Interface
         float VehicleSpeedMPH { get; }
         bool IsMovingSlowly { get; }
         bool IsInFelonyStop { get; }
-        void InitiateFelonyStop();
+        bool IsPendingFelonyTrafficStop { get; }
+        void InitiateFelonyTrafficStop();
     }
 }

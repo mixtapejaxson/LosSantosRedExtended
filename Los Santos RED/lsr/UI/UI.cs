@@ -49,6 +49,7 @@ public class UI : IMenuProvideable
     private bool StartedDeathEffect = false;
     private bool StartedFelonyStopEffect = false;
     private uint GameTimeLastFelonyStop;
+    private const uint FelonyStopMenuDelayMs = 500;
     private string debugString1;
     private bool ShowRadar;
     private uint SpriteUint;
@@ -363,6 +364,10 @@ public class UI : IMenuProvideable
                 Show(BustedMenu);
             }
         }
+        else if (DisplayablePlayer.IsPendingFelonyTrafficStop)
+        {
+            Game.DisplaySubtitle("~r~PULL OVER!~s~ Officers have identified you - stop your vehicle immediately.");
+        }
         else if (DisplayablePlayer.IsInFelonyStop)
         {
             if (!StartedFelonyStopEffect)
@@ -370,7 +375,7 @@ public class UI : IMenuProvideable
                 GameTimeLastFelonyStop = Game.GameTime;
                 StartedFelonyStopEffect = true;
             }
-            if (GameTimeLastFelonyStop != 0 && Game.GameTime - GameTimeLastFelonyStop >= 500)
+            if (GameTimeLastFelonyStop != 0 && Game.GameTime - GameTimeLastFelonyStop >= FelonyStopMenuDelayMs)
             {
                 GameTimeLastFelonyStop = 0;
                 Show(FelonyStopMenu);

@@ -68,5 +68,6 @@ namespace LosSantosRED.lsr.Interface
         uint TimeInCurrentVehicle { get; }
         bool IsCop { get; }
         bool IsInFelonyStop { get; }
+        bool IsPendingFelonyTrafficStop { get; }
     }
 }
