@@ -142,7 +142,10 @@ public class BustedMenu : ModUIMenu
     }
     private void AddGeneralItems()
     {
-        AddResist();
+        if (!Player.CuffManager.IsHandcuffed)
+        {
+            AddResist();
+        }
     }
     private void CreateLowLevelItems()
     {

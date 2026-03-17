@@ -36,6 +36,7 @@ namespace LosSantosRED.lsr
         public bool HasDeadlyHistory => CurrentHistory != null && CurrentHistory.Crimes.Any(x => x.AssociatedCrime.ResultsInLethalForce);
         public int MaxWantedLevel => LastWantedMaxLevel;
         public List<Crime> WantedCrimes => CurrentHistory?.Crimes.Select(x => x.AssociatedCrime).ToList();
+        public bool IsEligibleForFelonyStop => HasHistory && MaxWantedLevel >= Settings.SettingsManager.CriminalHistorySettings.FelonyStopMinimumWantedLevel;
         public void Dispose()
         {
             if (CriminalHistoryBlip.Exists())
@@ -68,6 +69,10 @@ namespace LosSantosRED.lsr
         {
             CurrentHistory = null;
             //EntryPoint.WriteToConsole($" PLAYER EVENT: Criminal History Clear");
+        }
+        public void ApplyFelonyStopWanted()
+        {
+            ApplyLastWantedStats();
         }
         public void AddCrime(Crime crime)
         {

@@ -17,6 +17,10 @@ public class CriminalHistorySettings : ISettingsDefaultable
     public float MinimumSearchRadius { get; set; }
     [Description("Additional radius added for each wanted level. Ex. At SearchRadiusIncrement = 400 a 3 star wanted level would result in a 1.2 km bolo/apb radius ")]
     public float SearchRadiusIncrement { get; set; }
+    [Description("Enable felony stops when the player is spotted in a vehicle during a BOLO/APB. Officers in a vehicle will attempt to initiate a felony stop before engaging.")]
+    public bool FelonyStopEnabled { get; set; }
+    [Description("Minimum BOLO/APB wanted level required to initiate a felony stop. For example, a value of 2 requires the player's prior wanted level to have been at least 2 stars.")]
+    public int FelonyStopMinimumWantedLevel { get; set; }
     public CriminalHistorySettings()
     {
         SetDefault();
@@ -28,6 +32,8 @@ public class CriminalHistorySettings : ISettingsDefaultable
         CreateBlip = true;
         MinimumSearchRadius = 400f;
         SearchRadiusIncrement = 400f;
+        FelonyStopEnabled = true;
+        FelonyStopMinimumWantedLevel = 2;
     }
 
 }

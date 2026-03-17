@@ -328,6 +328,7 @@ namespace Mod
         public bool IsDetainable => !Settings.SettingsManager.ViolationSettings.IsUnBustable && IsAliveAndFree && !ActivityManager.IsCommitingSuicide && !ActivityManager.IsHoldingHostage && !RecentlyBusted && !RecentlyResistedArrest && !IsAiming && !RecentlyShot && !PoliceResponse.IsWeaponsFree && (IsIncapacitated || (IsMovingSlowly && !IsMovingDynamically)) && (!IsInVehicle || IsIncapacitated);
         public bool IsAnimal => false;
         public bool IsBusted { get; private set; }
+        public bool IsInFelonyStop { get; private set; }
         public bool IsCarJacking { get; set; }
         public bool IsChangingLicensePlates { get; set; }
         public bool IsSetAutoCallBackup { get; set; } = false;
@@ -709,6 +710,7 @@ namespace Mod
             IsBusted = false;
             IsArrested = false;
             IsBeingBooked = false;
+            IsInFelonyStop = false;
             Game.LocalPlayer.HasControl = true;
             BeingArrested = false;
             HealthState.Reset();
@@ -1934,6 +1936,29 @@ namespace Mod
             {
                 OnPlayerBusted();
             }
+        }
+        public void InitiateFelonyStop()
+        {
+            if (IsInFelonyStop || IsWanted || IsBusted || !IsInVehicle || !CriminalHistory.IsEligibleForFelonyStop)
+            {
+                return;
+            }
+            IsInFelonyStop = true;
+            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Initiated");
+            CriminalHistory.ApplyFelonyStopWanted();
+        }
+        public void OnFelonyStopComply()
+        {
+            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Player Complied");
+            CuffManager.SetPlayerHandcuffed();
+            Arrest();
+            IsInFelonyStop = false;
+        }
+        public void OnFelonyStopResist()
+        {
+            EntryPoint.WriteToConsole("PLAYER FELONY STOP: Player Resisted");
+            Respawning.ResistArrest();
+            IsInFelonyStop = false;
         }
         public void SetWantedLevel(int desiredWantedLevel, string Reason, bool UpdateRecent)
         {

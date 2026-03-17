@@ -69,6 +69,7 @@ namespace LosSantosRED.lsr.Interface
         bool IsInWantedActiveMode { get; }
         float VehicleSpeedMPH { get; }
         bool IsMovingSlowly { get; }
-        //bool IsHostile(Gang gang);
+        bool IsInFelonyStop { get; }
+        void InitiateFelonyStop();
     }
 }

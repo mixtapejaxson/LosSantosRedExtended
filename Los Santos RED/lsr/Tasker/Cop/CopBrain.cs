@@ -122,6 +122,11 @@ public class CopBrain : PedBrain
                 {
                     SetMarshalLocate();
                 }
+                else if (ShouldInitiateFelonyStop())
+                {
+                    Player.InitiateFelonyStop();
+                    SetChase();
+                }
                 else if(Cop.WasModSpawned)
                 {
                     SetIdle();
@@ -133,6 +138,18 @@ public class CopBrain : PedBrain
             SetIdle();
         }
         Cop.GameTimeLastUpdatedTask = Game.GameTime;
+    }
+    private bool ShouldInitiateFelonyStop()
+    {
+        return Settings.SettingsManager.CriminalHistorySettings.FelonyStopEnabled
+            && !Player.IsWanted
+            && !Player.IsInFelonyStop
+            && Player.IsInVehicle
+            && Cop.IsInVehicle
+            && Cop.IsDriver
+            && Player.CriminalHistory.IsEligibleForFelonyStop
+            && Cop.CanSeePlayer
+            && Cop.DistanceToPlayer <= 100f;
     }
     private PedExt PedToAttack()
     {
